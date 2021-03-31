@@ -1,4 +1,4 @@
-package com.lewandowski.demo;
+package com.lewandowski;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
