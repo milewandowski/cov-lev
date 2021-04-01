@@ -1,6 +1,7 @@
 package com.lewandowski.service;
 
 import com.lewandowski.entity.CountriesResponse;
+import com.lewandowski.entity.StatisticsResponse;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.PropertySource;
 import org.springframework.http.HttpHeaders;
@@ -17,6 +18,7 @@ public class CovidService {
     @Value("${x.rapidapi.key}")
     private String apiKey;
     private final WebClient.Builder webClientBuilder;
+    private final String BASE_URI = "https://covid-193.p.rapidapi.com";
     private CountriesResponse countriesResponse;
 
     public CovidService(WebClient.Builder webClientBuilder) {
@@ -31,12 +33,30 @@ public class CovidService {
                     .defaultHeader("x-rapidapi-key", apiKey)
                     .build()
                     .get()
-                    .uri("https://covid-193.p.rapidapi.com/countries")
+                    .uri(BASE_URI + "/countries")
                     .retrieve()
                     .bodyToMono(CountriesResponse.class)
                     .block();
         }
         return countriesResponse;
+    }
+
+    public void getStatisticsForCountry(String countryName) {
+        boolean isPresent = getAllCountries().getResponse().stream()
+                .anyMatch(country -> country.equals(countryName));
+        if(isPresent) {
+            StatisticsResponse statisticsResponse = webClientBuilder
+                    .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
+                    .defaultHeader("x-rapidapi-key", apiKey)
+                    .build()
+                    .get()
+                    .uri(BASE_URI + "/statistics?country=" + countryName)
+                    .retrieve()
+                    .bodyToMono(StatisticsResponse.class)
+                    .block();
+
+            System.out.println(statisticsResponse);
+        }
     }
 
 }
