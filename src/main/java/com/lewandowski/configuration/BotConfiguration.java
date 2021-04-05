@@ -23,13 +23,14 @@ public class BotConfiguration {
                 .login()
                 .block();
 
-        for(EventListener<T> listener : eventListeners) {
-            client.on(listener.getEventType())
-                    .flatMap(listener::execute)
-                    .onErrorResume(listener::handleError)
-                    .subscribe();
+        if(client != null) {
+            for (EventListener<T> listener : eventListeners) {
+                client.on(listener.getEventType())
+                        .flatMap(listener::execute)
+                        .onErrorResume(listener::handleError)
+                        .subscribe();
+            }
         }
-
         return client;
     }
 
