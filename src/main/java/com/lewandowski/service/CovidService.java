@@ -11,8 +11,7 @@ import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
 
 import javax.annotation.PostConstruct;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 @Service
 @PropertySource("classpath:APIKeys.properties")
@@ -29,7 +28,7 @@ public class CovidService {
     }
 
     @PostConstruct
-    public void getAllCountries() {
+    private void fillSetWithAllCountries() {
         webClientBuilder
                 .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
                 .defaultHeader("x-rapidapi-key", apiKey)
@@ -41,19 +40,20 @@ public class CovidService {
                 .subscribe(countriesResponse -> countries.addAll(countriesResponse.getResponse()));
     }
 
-    public void getStatisticsForCountry(String countryName) {
-        boolean isPresent = countries.stream()
-                .anyMatch(country -> country.equals(countryName));
-        if (isPresent) {
-            Mono<StatisticsResponse> statisticsResponse = webClientBuilder
-                    .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
-                    .defaultHeader("x-rapidapi-key", apiKey)
-                    .build()
-                    .get()
-                    .uri(BASE_URI + "/statistics?country=" + countryName)
-                    .retrieve()
-                    .bodyToMono(StatisticsResponse.class);
-        }
+    public Optional<String> checkIfCountryNameExists(String countryName) {
+        return countries.stream()
+                .filter(name -> name.equalsIgnoreCase(countryName))
+                .findFirst();
     }
 
+    public Mono<StatisticsResponse> getStatisticsForCountry(String countryName) {
+        return webClientBuilder
+                .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
+                .defaultHeader("x-rapidapi-key", apiKey)
+                .build()
+                .get()
+                .uri(BASE_URI + "/statistics?country=" + countryName)
+                .retrieve()
+                .bodyToMono(StatisticsResponse.class);
+    }
 }
